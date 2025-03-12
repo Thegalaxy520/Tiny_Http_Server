@@ -389,4 +389,5 @@ int hexit(char c)
 		return c - 'A' + 10;
 
 	return 0;
+
 }
