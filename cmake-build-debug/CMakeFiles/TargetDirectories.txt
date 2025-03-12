@@ -1,3 +1,0 @@
-/home/moon/Desktop/Linux_learn/Design/cmake-build-debug/CMakeFiles/Design.dir
-/home/moon/Desktop/Linux_learn/Design/cmake-build-debug/CMakeFiles/edit_cache.dir
-/home/moon/Desktop/Linux_learn/Design/cmake-build-debug/CMakeFiles/rebuild_cache.dir
