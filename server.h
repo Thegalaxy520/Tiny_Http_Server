@@ -25,4 +25,7 @@ int sendDir(int cfd,const char * Path);
 int disconnect(int fd,int epfd);
 //通过文件名得到文件的content-type
 const char *getFileType(const char *name);
+//中文字符转换
+void decodeMsg(char *to, char *from);
+int hexit(char c);
 #endif //SERVER_H
