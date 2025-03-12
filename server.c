@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <unistd.h>
+#include <dirent.h>
 #include <asm-generic/errno-base.h>
 #include <sys/stat.h>
 
@@ -200,7 +201,8 @@ int praseRequireLine(int cfd, const char *reqLine)
 	else
 	{
 		//如果是目录就遍历目录，把目录内容发送给客户端
-		sendHeadMessage();
+		sendHeadMessage(cfd,200,"OK",getFileType(".html"),-1);
+		sendDir(cfd,file);
 		//发送目录函数
 	}
 	return 0;
@@ -264,8 +266,45 @@ int sendFile(int cfd, const char* Filename)
 
 int sendDir(int cfd, const char *Path)
 {
+	char buf[4096];
+	sprintf(buf,"<html><head><title>%s</title></head><body><table>", Path);
 	//遍历目录文件
 	//将目录中的所有文件发给客户端
+	struct dirent **namelist;
+
+	int num =scandir(Path,&namelist,NULL,alphasort);
+
+	for (int i = 0 ; i < num;i++)
+	{
+		//取出文件名
+		char * name = namelist[i]->d_name;
+		//拼接当前文件在资源文件中的相对路径
+		char subpath[1024];
+		sprintf(subpath,"%s/%s",Path,name);
+		struct stat st;
+		stat(subpath,&st);
+		if (S_ISDIR(st.st_mode))
+		{
+			// 如果是目录, 超链接的跳转路径文件名后边加 /
+			sprintf(buf + strlen(buf),
+				"<tr><td><a href=\"%s/\">%s</a></td><td>%ld</td></tr>",
+				name, name, (long)st.st_size);
+		}
+		else
+		{
+			sprintf(buf + strlen(buf),
+				"<tr><td><a href=\"%s\">%s</a></td><td>%ld</td></tr>",
+				name, name, (long)st.st_size);
+		}
+		// 发送数据
+		send(cfd, buf, strlen(buf), 0);
+		// 清空数组
+		memset(buf, 0, sizeof(buf));
+		// 释放资源 namelist[i] 这个指针指向一块有效的内存
+		free(namelist[i]);
+	}
+
+
 	return 0;
 }
 
