@@ -202,7 +202,7 @@ int praseRequireLine(int cfd, const char *reqLine)
 	{
 		//如果是目录就遍历目录，把目录内容发送给客户端
 		sendHeadMessage(cfd,200,"OK",getFileType(".html"),-1);
-		sendDir();
+		sendDir(cfd,file);
 		//发送目录函数
 	}
 	return 0;
