@@ -308,8 +308,6 @@ int sendDir(int cfd, const char *Path)
 		// 释放资源 namelist[i] 这个指针指向一块有效的内存
 		free(namelist[i]);
 	}
-
-
 	return 0;
 }
 

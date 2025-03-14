@@ -28,5 +28,6 @@ const char *getFileType(const char *name);
 //中文字符转换
 void decodeMsg(char *to, char *from);
 
+
 int hexit(char c);
 #endif //SERVER_H
