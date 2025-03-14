@@ -353,6 +353,7 @@ const char *getFileType(const char *name)
 }
 
 
+//
 void decodeMsg(char *to, char *from)
 {
 	for (; *from != '\0'; ++to, ++from)
