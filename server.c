@@ -1,5 +1,6 @@
 #include "server.h"
 
+#include <ctype.h>
 #include <errno.h>
 #include <arpa/inet.h>
 #include <stdlib.h>
@@ -172,6 +173,8 @@ int praseRequireLine(int cfd, const char *reqLine)
 		printf("用户发送的不是get请求，忽略。。。。\n");
 		return -1;
 	}
+	// 如果文件名中有中文, 需要还原
+	decodeMsg(path, path);
 	if (strcmp(path, "/") == 0)
 	{
 		file = "./";
@@ -250,6 +253,8 @@ int sendFile(int cfd, const char* Filename)
 		{
 			//发送读出的数据
 			send(cfd, buf ,len ,0);
+			//发送端发太快会导致接收端的显示有异常
+			usleep(10);
 		}
 		else if (len == 0)//文件读完了
 		{
@@ -347,4 +352,42 @@ const char *getFileType(const char *name)
 		return "application/x-ns-proxy-autoconfig";
 
 	return "text/plain; charset=utf-8";
+}
+
+
+void decodeMsg(char *to, char *from)
+{
+	for (; *from != '\0'; ++to, ++from)
+	{
+		// isxdigit -> 判断字符是不是16进制格式
+		// Linux%E5%86%85%E6%A0%B8.jpg
+		if (from[0] == '%' && isxdigit(from[1]) && isxdigit(from[2]))
+		{
+			// 将16进制的数 -> 十进制 将这个数值赋值给了字符 int -> char
+			// A1 == 161
+			*to = hexit(from[1]) * 16 + hexit(from[2]);
+
+			from += 2;
+		}
+		else
+		{
+			// 不是特殊字符字节赋值
+			*to = *from;
+		}
+	}
+	*to = '\0';
+}
+
+// 最终得到10进制的整数
+int hexit(char c)
+{
+	if (c >= '0' && c <= '9')
+		return c - '0';
+	if (c >= 'a' && c <= 'f')
+		return c - 'a' + 10;
+	if (c >= 'A' && c <= 'F')
+		return c - 'A' + 10;
+
+	return 0;
+
 }
