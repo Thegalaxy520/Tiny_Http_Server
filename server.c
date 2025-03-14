@@ -11,6 +11,7 @@
 #include <dirent.h>
 #include <asm-generic/errno-base.h>
 #include <sys/stat.h>
+#include<sys/sendfile.h>
 
 int initSockFD(unsigned short port)
 {
@@ -244,29 +245,30 @@ int sendFile(int cfd, const char* Filename)
 {
 	//1.打开文件
 	int fd = open(Filename,O_RDONLY);
-	//循环读文件
-	while (1)
-	{
-		char buf[1024] = {0};
-		int len = read(fd,buf,sizeof(buf));
-		if (len > 0)
-		{
-			//发送读出的数据
-			send(cfd, buf ,len ,0);
-			//发送端发太快会导致接收端的显示有异常
-			usleep(10);
-		}
-		else if (len == 0)//文件读完了
-		{
-			break;
-		}
-		else
-		{
-			perror("读取文件失败...");
-			return -1;
-		}
-	}
-	return 0;
+    if (fd == -1) {
+        perror("open error");
+        return -1;
+    }
+	struct stat st;
+    fstat(fd, &st);
+    off_t offset = 0;
+    ssize_t sent_bytes;
+
+    while (offset < st.st_size) {
+        sent_bytes = sendfile(cfd, fd, &offset, st.st_size - offset);
+        if (sent_bytes == -1) {
+            if (errno == EAGAIN) {
+                continue; // 再次尝试发送
+            }
+            perror("sendfile error");
+            close(fd);
+            return -1;
+        }
+        offset += sent_bytes;
+    }
+
+    close(fd);
+    return 0;
 }
 
 int sendDir(int cfd, const char *Path)
